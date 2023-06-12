@@ -1,9 +1,15 @@
 package com.example.wasteControl.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserReqDto {
     private String userName;
     private int status;
@@ -14,6 +20,5 @@ public class UserReqDto {
     private String phone;
     private String address;
     private String email;
-
     private int roleId;
 }

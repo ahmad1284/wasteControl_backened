@@ -1,9 +1,7 @@
 package com.example.wasteControl.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
+
+import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -13,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 
-import static jakarta.persistence.TemporalType.TIMESTAMP;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -23,11 +20,14 @@ public abstract class Auditable <U>{
     @Column(updatable = false)
     protected U createdBy;
     @CreatedDate
-    @Temporal(TIMESTAMP)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(updatable = false)
     protected Date createdDate;
     @LastModifiedBy
     protected U modifiedBy;
     @LastModifiedDate
     protected Date modifiedDate;
+
+
 }
+

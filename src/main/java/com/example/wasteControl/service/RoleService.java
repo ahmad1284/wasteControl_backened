@@ -28,7 +28,6 @@ public class RoleService {
     }
     public ResponseEntity add (RoleReqDto roleReqDto){
         Role role = modelMapper.map(roleReqDto, Role.class);
-        role.setStatus(1);
         roleRepository.save(role);
 
         Map response=new HashMap();

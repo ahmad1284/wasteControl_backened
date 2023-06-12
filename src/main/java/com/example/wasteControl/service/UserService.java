@@ -1,9 +1,6 @@
 package com.example.wasteControl.service;
 
-import com.example.wasteControl.dto.LoginDto;
-import com.example.wasteControl.dto.UserProfileDto;
-import com.example.wasteControl.dto.UserReqDto;
-import com.example.wasteControl.dto.UserRespDto;
+import com.example.wasteControl.dto.*;
 import com.example.wasteControl.model.Role;
 import com.example.wasteControl.model.User;
 import com.example.wasteControl.repo.RoleRepo;
@@ -31,16 +28,19 @@ public class UserService {
     private final ModelMapper modelMapper;
     private final UserRepo userRepository;
     private final RoleRepo roleRepository;
+
+    private final JwtService jwtService;
     @Autowired
     PasswordEncoder passwordEncoder;
     private final Path root = Paths.get("uploads");
 
-    public UserService(ModelMapper modelMapper, UserRepo userRepository, RoleRepo roleRepository){
+    public UserService(ModelMapper modelMapper, UserRepo userRepository, RoleRepo roleRepository, JwtService jwtService){
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.jwtService = jwtService;
     }
-    public Boolean add (UserReqDto userReqDto) {
+    public AuthenticationResponse add (UserReqDto userReqDto) {
         Optional<Role> r = roleRepository.findById(userReqDto.getRoleId());
         modelMapper.getConfiguration().setAmbiguityIgnored(true);
         if (!r.isPresent()) {
@@ -54,9 +54,12 @@ public class UserService {
         users.setPassword(encPsd);
         userRepository.save(users);
 
-        Map response = new HashMap();
-        response.put("response", Boolean.TRUE);
-        return Boolean.TRUE;
+        var jwtToken = jwtService.generateToken(users);
+        return AuthenticationResponse.builder().token(jwtToken).build();
+
+//        Map response = new HashMap();
+//        response.put("response", Boolean.TRUE);
+//        return Boolean.TRUE;
     }
 
     public Boolean addProfile(UserProfileDto userProfileDto){
@@ -123,19 +126,26 @@ public class UserService {
         response.put("response",Boolean.TRUE);
         return  ResponseEntity.ok().body(response);
     }
-    public Boolean doLogin(LoginDto loginDto){
+    public UserRespDto doLogin(LoginDto loginDto){
 
         String rawPassword = loginDto.getPassword();
         String encodedPassword = userRepository.findPasswordByUserName(loginDto.getUserName());
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         boolean passwordMatches = encoder.matches(rawPassword, encodedPassword);
-
-        if(passwordMatches){
-            return true;
-        }else{
-            return false;
+        Optional<User> u = userRepository.findByUserName(loginDto.getUserName());
+        if(!u.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+
+        Map response = new HashMap();
+        if(passwordMatches){
+            response.put("response",Boolean.TRUE);
+
+        }else{
+            response.put("response",Boolean.FALSE);
+        }
+        return modelMapper.map(u.get(), UserRespDto.class);
 
 
     }

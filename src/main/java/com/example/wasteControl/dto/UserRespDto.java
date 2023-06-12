@@ -16,4 +16,5 @@ public class UserRespDto extends Auditable<String> {
     private String phone;
     private String address;
     private String email;
+    private int roleId;
 }

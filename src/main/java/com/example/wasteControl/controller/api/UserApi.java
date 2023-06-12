@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 public interface UserApi  {
     @RequestMapping(value = "/", method = RequestMethod.POST,  produces = "application/json", consumes = "application/json")
     public ResponseEntity addUser(@RequestBody UserReqDto userReqDto );
-
     @RequestMapping(value = "/profile", method = RequestMethod.PUT,  consumes = "multipart/form-data")
     public ResponseEntity addUserProfile(@ModelAttribute UserProfileDto userProfileDto );
     @RequestMapping(value = "/", method = RequestMethod.GET, produces = "application/json")

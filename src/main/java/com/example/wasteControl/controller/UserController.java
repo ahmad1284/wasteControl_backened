@@ -32,7 +32,7 @@ public class UserController implements UserApi {
         return ResponseEntity.ok().body(userService.edit(id, userReqDto));
     }
 
-    public ResponseEntity<Boolean> auth(LoginDto loginDto) {
+    public ResponseEntity auth(LoginDto loginDto) {
         return ResponseEntity.ok().body(userService.doLogin(loginDto));
 
     }
