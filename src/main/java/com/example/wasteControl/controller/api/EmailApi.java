@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public interface EmailApi {
     @RequestMapping(value = "/email/{sendTo}", method = RequestMethod.POST)
-    public ResponseEntity sendEmail(@PathVariable("sendTo")  String sendTo ) throws javax.mail.MessagingException, MessagingException;
+    public ResponseEntity sendEmail(@PathVariable("sendTo")  String sendTo ) throws MessagingException;
 
 }
