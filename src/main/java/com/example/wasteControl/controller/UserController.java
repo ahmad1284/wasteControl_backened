@@ -5,6 +5,7 @@ import com.example.wasteControl.dto.LoginDto;
 import com.example.wasteControl.dto.UserProfileDto;
 import com.example.wasteControl.dto.UserReqDto;
 import com.example.wasteControl.service.UserService;
+import jakarta.mail.MessagingException;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,8 +33,12 @@ public class UserController implements UserApi {
         return ResponseEntity.ok().body(userService.edit(id, userReqDto));
     }
 
-    public ResponseEntity auth(LoginDto loginDto) {
+    public ResponseEntity login(LoginDto loginDto) {
         return ResponseEntity.ok().body(userService.doLogin(loginDto));
+
+    }
+    public ResponseEntity sendEmail(String sendTo) throws MessagingException {
+        return ResponseEntity.ok().body(userService.sendEmail(sendTo));
 
     }
 }

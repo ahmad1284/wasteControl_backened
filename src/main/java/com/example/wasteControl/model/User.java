@@ -31,6 +31,12 @@ public class User extends Auditable<String> implements UserDetails {
     @JoinColumn(name = "roleId", referencedColumnName = "roleId")
     private Role role;
 
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    private List<Complain> complains;
+
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    private List<Comments> comments;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.getRoleName()));
