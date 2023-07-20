@@ -30,4 +30,7 @@ public interface UserApi  {
 
     @RequestMapping(value = "/email/{sendTo}", method = RequestMethod.POST)
     public ResponseEntity sendEmail(@PathVariable("sendTo")  String sendTo ) throws MessagingException;
+
+
+
 }

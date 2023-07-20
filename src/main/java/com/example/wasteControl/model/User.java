@@ -21,9 +21,8 @@ public class User extends Auditable<String> implements UserDetails {
     private int status;
     private String password;    
     private String profile;
-    private String firstName;
-    private String middleName;
-    private String lastName;
+    private String firstnme;
+    private String surname;
     private String phone;
     private String address;
     private String email;

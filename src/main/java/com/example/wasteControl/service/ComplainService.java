@@ -10,11 +10,10 @@ import lombok.Data;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,12 +32,25 @@ public class ComplainService {
         this.userRepository = userRepository;
         this.complainRepo = complainRepo;
     }
+    public MediaType determineImageMediaType(String imageName) {
+        if (imageName.toLowerCase().endsWith(".jpg") || imageName.toLowerCase().endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (imageName.toLowerCase().endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        } else if (imageName.toLowerCase().endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        } else {
+            // Set a default content type for unsupported image types
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
+    }
     public List<ComplainRespDto> getAll(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
         ComplainRespDto complainRespDto = null;
         List list = new ArrayList();
         for(Complain complain: complainRepo.findAll(pageable)){
             complainRespDto = modelMapper.map(complain,ComplainRespDto.class);
+            complainRespDto.setComplainer(complain.getUser().getUserId());
             list.add(complainRespDto);
         }
         return list;
@@ -64,10 +76,16 @@ public class ComplainService {
         Map response=new HashMap();
         response.put("response",Boolean.TRUE);
         Complain complain = modelMapper.map(complainReqDto, Complain.class);
-        complain.setImage("/uploads/" + int_random + "." + ext);
+        complain.setImage(int_random + "." + ext);
         User user = u.get();
         complain.setUser(user);
         complainRepo.save(complain);
         return  ResponseEntity.ok().body(response);
+    }
+
+    public byte[] getComplainImage(String imageName) throws IOException {
+        Path imagePath = Paths.get(String.valueOf(root), imageName);
+        byte[] imageBytes = Files.readAllBytes(imagePath);
+        return imageBytes;
     }
 }

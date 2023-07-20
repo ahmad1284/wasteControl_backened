@@ -10,9 +10,11 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.Data;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,6 +22,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +52,7 @@ public class UserService {
     public AuthenticationResponse doLogin(LoginDto loginDto){
         String rawPassword = loginDto.getPassword();
         String encodedPassword = userRepository.findPasswordByUserName(loginDto.getUserName());
+        AuthenticationResponse authenticationResponse = null;
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         boolean passwordMatches = encoder.matches(rawPassword, encodedPassword);
@@ -55,19 +60,18 @@ public class UserService {
         if(u.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-
         Map response = new HashMap();
         if(passwordMatches){
             response.put("response",Boolean.TRUE);
-
         }else{
             response.put("response",Boolean.FALSE);
         }
         User users = modelMapper.map(loginDto, User.class);
+        authenticationResponse = modelMapper.map(users,AuthenticationResponse.class);
         var jwtToken = jwtService.generateToken(users);
-        return AuthenticationResponse.builder().token(jwtToken).build();
+        authenticationResponse.setToken(jwtToken);
 
-
+        return authenticationResponse;
     }
     public AuthenticationResponse add (UserReqDto userReqDto) {
         Optional<Role> r = roleRepository.findById(userReqDto.getRoleId());
@@ -83,6 +87,7 @@ public class UserService {
         userRepository.save(users);
 
         var jwtToken = jwtService.generateToken(users);
+
         return AuthenticationResponse.builder().token(jwtToken).build();
 
     }
@@ -97,11 +102,9 @@ public class UserService {
             String fileName = userProfileDto.getProfile().getOriginalFilename();
             ext = fileName.substring(userProfileDto.getProfile().getOriginalFilename().lastIndexOf(".") + 1);
             Files.copy(userProfileDto.getProfile().getInputStream(), this.root.resolve(int_random + "." + ext));
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
         User users = modelMapper.map(userProfileDto, User.class);
         users.setProfile("/uploads/" + int_random + "." + ext);
 
@@ -112,18 +115,17 @@ public class UserService {
             users.setUserId(userProfileDto.getUserId());
             userRepository.save(users);
         }
-
         Map response = new HashMap();
         response.put("response", Boolean.TRUE);
         return Boolean.TRUE;
-
     }
-    public List<UserRespDto> getAll(int page, int size){
+
+        public List<UserRespDto> getAll(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
         UserRespDto userRespDto = null;
         List list = new ArrayList();
         for(User users : userRepository.findAll(pageable)){
-            modelMapper.getConfiguration().setAmbiguityIgnored(true);
+//            modelMapper.getConfiguration().setAmbiguityIgnored(true);
             userRespDto = modelMapper.map(users,UserRespDto.class);
             list.add(userRespDto);
         }
