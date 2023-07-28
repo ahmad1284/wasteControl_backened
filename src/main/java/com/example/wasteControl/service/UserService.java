@@ -10,11 +10,9 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.Data;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -49,7 +47,7 @@ public class UserService {
         this.jwtService = jwtService;
         this.javaMailSender = javaMailSender;
     }
-    public AuthenticationResponse doLogin(LoginDto loginDto){
+    public ResponseEntity<?> doLogin(LoginDto loginDto){
         String rawPassword = loginDto.getPassword();
         String encodedPassword = userRepository.findPasswordByUserName(loginDto.getUserName());
         AuthenticationResponse authenticationResponse = null;
@@ -57,21 +55,29 @@ public class UserService {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         boolean passwordMatches = encoder.matches(rawPassword, encodedPassword);
         Optional<User> u = userRepository.findByUserName(loginDto.getUserName());
-        if(u.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-        Map response = new HashMap();
-        if(passwordMatches){
-            response.put("response",Boolean.TRUE);
-        }else{
-            response.put("response",Boolean.FALSE);
-        }
+
+
         User users = modelMapper.map(loginDto, User.class);
         authenticationResponse = modelMapper.map(users,AuthenticationResponse.class);
+
         var jwtToken = jwtService.generateToken(users);
+        authenticationResponse.setRole(userRepository.findRoleByName(loginDto.getUserName()));
         authenticationResponse.setToken(jwtToken);
 
-        return authenticationResponse;
+        if(passwordMatches == true && u != null ){
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwtToken);
+            response.put("role", userRepository.findRoleByName(loginDto.getUserName()));
+            response.put("username",loginDto.getUserName());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else{
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Invalid credentials");
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+
+        }
+
     }
     public AuthenticationResponse add (UserReqDto userReqDto) {
         Optional<Role> r = roleRepository.findById(userReqDto.getRoleId());
